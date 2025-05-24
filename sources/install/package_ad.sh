@@ -1068,15 +1068,7 @@ function install_rusthound() {
     # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing RustHound"
     fapt gcc clang libclang-dev libgssapi-krb5-2 libkrb5-dev libsasl2-modules-gssapi-mit musl-tools gcc-mingw-w64-x86-64
-    git -C /opt/tools/ clone --depth 1 https://github.com/NH-RED-TEAM/RustHound
-    cd /opt/tools/RustHound || exit
-    # Sourcing rustup shell setup, so that rust binaries are found when installing cme
-    source "$HOME/.cargo/env"
-    cargo update -p time
-    cargo build --release
-    # Clean dependencies used to build the binary
-    rm -rf target/release/{deps,build}
-    ln -s /opt/tools/RustHound/target/release/rusthound /opt/tools/bin/rusthound
+    cargo install -y rusthound
     add-history rusthound
     add-test-command "rusthound --help"
     add-to-list "rusthound,https://github.com/NH-RED-TEAM/RustHound,BloodHound ingestor in Rust."
@@ -1086,14 +1078,7 @@ function install_rusthound-ce() {
     # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing RustHound for BloodHound-CE"
     fapt gcc clang libclang-dev libgssapi-krb5-2 libkrb5-dev libsasl2-modules-gssapi-mit musl-tools gcc-mingw-w64-x86-64
-    git -C /opt/tools/ clone --depth 1 https://github.com/g0h4n/RustHound-CE
-    cd /opt/tools/RustHound-CE || exit
-    # Sourcing rustup shell setup, so that rust binaries are found when installing cme
-    source "$HOME/.cargo/env"
-    cargo build --release
-    # Clean dependencies used to build the binary
-    rm -rf target/release/{deps,build}
-    ln -v -s /opt/tools/RustHound-CE/target/release/rusthound-ce /opt/tools/bin/rusthound-ce
+    cargo install -y rusthound-ce
     add-history rusthound-ce
     add-test-command "rusthound-ce --help"
     add-to-list "rusthound-ce,https://github.com/g0h4n/RustHound-CE,BloodHound-CE ingestor in Rust."

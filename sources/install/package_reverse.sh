@@ -139,9 +139,7 @@ function install_pwninit() {
     # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing pwninit"
     fapt liblzma-dev patchelf elfutils
-    # Sourcing rustup shell setup, so that rust binaries are found when installing cme
-    source "$HOME/.cargo/env"
-    cargo install pwninit
+    cargo binstall -y pwninit
     add-history pwninit
     add-test-command "pwninit --help"
     add-to-list "pwninit,https://github.com/io12/pwninit,A tool for automating starting binary exploit challenges"
