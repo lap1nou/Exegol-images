@@ -210,12 +210,16 @@ function install_wesng() {
 
 function install_glow() {
     # CODE-CHECK-WHITELIST=add-aliases,add-history
+    local url
+    local version
     colorecho "Installing glow"
-    wget https://github.com/charmbracelet/glow/releases/download/v2.1.0/glow_2.1.0_Linux_x86_64.tar.gz -O /tmp/glow.tar.gz
+    url=$(curl --location --silent --output /dev/null --write-out %{url_effective} https://github.com/charmbracelet/glow/releases/latest)
+    version=${url##*v}
+    wget https://github.com/charmbracelet/glow/releases/download/v${version}/glow_${version}_Linux_x86_64.tar.gz -O /tmp/glow.tar.gz
     tar -xvf /tmp/glow.tar.gz
-    cp glow_2.1.0_Linux_x86_64/glow /opt/tools/bin
+    cp glow_${version}_Linux_x86_64/glow /opt/tools/bin
     rm -f /tmp/glow.tar.gz
-    rm -rf /tmp/glow_2.1.0_Linux_x86_64/
+    rm -rf /tmp/glow_${version}_Linux_x86_64/
     add-test-command "glow --help"
     add-to-list "glow,https://github.com/charmbracelet/glow,glow is a tool to render Markdown inside the terminal."
 }
