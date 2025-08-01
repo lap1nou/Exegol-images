@@ -271,7 +271,6 @@ function install_bloodhound-ce() {
     # Files and directories
     # work directory required by bloodhound
     mkdir -p "${bloodhoundce_path}/work"
-    ln -v -s "${bloodhoundce_path}/src/artifacts/bhapi" "${bloodhoundce_path}/bloodhound"
     cp -v /root/sources/assets/bloodhound-ce/bloodhound-ce /opt/tools/bin/
     cp -v /root/sources/assets/bloodhound-ce/bloodhound-ce-reset /opt/tools/bin/
     cp -v /root/sources/assets/bloodhound-ce/bloodhound-ce-stop /opt/tools/bin/
