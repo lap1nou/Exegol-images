@@ -202,17 +202,7 @@ function install_bloodhound-ce() {
     cp -r ./cmd/ui/dist/. ./cmd/api/src/api/static/assets
 
     # Build the API
-    git --no-pager -c 'versionsort.suffix=-rc' tag --list v*.*.* --sort=-v:refname | head -n 1 | sed 's/^v//' | awk \
-    -F'[.+-]' \
-    -v pkg="github.com/specterops/bloodhound/cmd/api/src/version" \
-    '{ major = $1; minor = $2; patch = $3; pre = ""; if ($4) pre = $4; \
-    printf("-X '\''%s.majorVersion=%s'\'' ", pkg, major); \
-    printf("-X '\''%s.minorVersion=%s'\'' ", pkg, minor); \
-    printf("-X '\''%s.patchVersion=%s'\''", pkg, patch); \
-    if (pre != "") \
-      printf(" -X '\''%s.prereleaseVersion=%s'\''", pkg, pre); \
-    }' > LDFLAGS
-    go build -C cmd/api/src -o ${bloodhoundce_path}/bloodhound -ldflags "$(cat LDFLAGS)" github.com/specterops/bloodhound/cmd/api/src/cmd/bhapi
+    go build -C cmd/api/src -o ${bloodhoundce_path}/bloodhound -ldflags "-X 'github.com/specterops/bloodhound/cmd/api/src/version.majorVersion=8' -X 'github.com/specterops/bloodhound/cmd/api/src/version.minorVersion=0' -X 'github.com/specterops/bloodhound/cmd/api/src/version.patchVersion=1'" github.com/specterops/bloodhound/cmd/api/src/cmd/bhapi
 
     # Force remove go and yarn cache that are not stored in standard locations
     rm -rf "${bloodhoundce_path}/src/cache" "${bloodhoundce_path}/src/.yarn/cache"
