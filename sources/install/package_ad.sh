@@ -1392,21 +1392,19 @@ function install_dploot() {
     add-to-list "dploot,https://github.com/zblurx/dploot,dploot is Python rewrite of SharpDPAPI written un C#."
 }
 
-# function install_PXEThief() {
-#     # CODE-CHECK-WHITELIST=
-#     colorecho "Installing PXEThief"
-#     git -C /opt/tools/ clone --depth 1 https://github.com/MWR-CyberSec/PXEThief
-#     cd /opt/tools/PXEThief || exit
-#     python3 -m venv ./venv
-#     source ./venv/bin/activate
-# TODO: pywin32 not found
-#     pip3 install -r requirements.txt
-#     deactivate
-#     add-aliases PXEThief
-#     add-history PXEThief
-#     add-test-command "PXEThief --help"
-#     add-to-list "PXEThief,https://github.com/MWR-CyberSec/PXEThief,PXEThief is a toolset designed to exploit vulnerabilities in Microsoft Endpoint Configuration Manager's OS Deployment enabling credential theft from network and task sequence accounts."
-# }
+function install_PXEThief() {
+    colorecho "Installing PXEThief"
+    git -C /opt/tools/ clone --depth 1 https://github.com/blurbdust/PXEThief.git
+    cd /opt/tools/PXEThief || exit
+    python3 -m venv --system-site-packages ./venv
+    source ./venv/bin/activate
+    pip3 install -r requirements.txt
+    deactivate
+    add-aliases pxethief
+    add-history pxethief
+    add-test-command "pxethief -h"
+    add-to-list "PXEThief,https://github.com/blurbdust/PXEThief,PXEThief is a set of tooling that can extract passwords from the Operating System Deployment functionality in Microsoft Endpoint Configuration Manager"
+}
 
 function install_sccmhunter() {
     colorecho "Installing sccmhunter"
@@ -1453,6 +1451,20 @@ function install_sccmwtf() {
     add-aliases sccmwtf
     add-history sccmwtf
     add-to-list "sccmwtf,https://github.com/xpn/sccmwtf,This code is designed for exploring SCCM in a lab."
+}
+
+function install_cmloot() {
+    colorecho "Installing cmloot"
+    git -C /opt/tools/ clone --depth 1 https://github.com/shelltrail/cmloot.git
+    cd /opt/tools/cmloot || exit
+    python3 -m venv --system-site-packages ./venv
+    source ./venv/bin/activate
+    pip3 install -r requirements.txt
+    deactivate
+    add-aliases cmloot
+    add-history cmloot
+    add-test-command "cmloot -h"
+    add-to-list "cmloot,https://github.com/shelltrail/cmloot,cmloot.py is built to aid penetration testers to search and find sensitive files in Configuration Manager's complex file share structure."
 }
 
 function install_smbclientng() {
@@ -1546,6 +1558,15 @@ function install_pysnaffler(){
     add-history pysnaffler
     add-test-command "pysnaffler --help"
     add-to-list "pysnaffler,https://github.com/skelsec/pysnaffler,Snaffler. But in python."
+}
+
+function install_evil-winrm-py() {
+    # CODE-CHECK-WHITELIST=add-aliases
+    colorecho "Installing evil-winrm-py"
+    pipx install --system-site-package 'evil-winrm-py[kerberos]@git+https://github.com/adityatelange/evil-winrm-py'
+    add-history evil-winrm-py
+    add-test-command "evil-winrm-py --help"
+    add-to-list "evil-winrm-py,https://github.com/adityatelange/evil-winrm-py,Evil-WinRM. But in python"
 }
 
 # Package dedicated to internal Active Directory tools
@@ -1649,10 +1670,11 @@ function package_ad() {
     install_bloodyAD               # Active Directory privilege escalation swiss army knife.
     install_autobloody             # Automatically exploit Active Directory privilege escalation paths.
     install_dploot                 # Python rewrite of SharpDPAPI written un C#.
-    # install_PXEThief             # TODO: pywin32 not found - PXEThief is a toolset designed to exploit vulnerabilities in Microsoft Endpoint Configuration Manager's OS Deployment, enabling credential theft from network and task sequence accounts.
+    install_PXEThief
     install_sccmhunter             # SCCMHunter is a post-ex tool built to streamline identifying, profiling, and attacking SCCM related assets in an Active Directory domain.
     install_sccmsecrets
     install_sccmwtf                # This code is designed for exploring SCCM in a lab.
+    install_cmloot
     install_smbclientng
     install_conpass                # Python tool for continuous password spraying taking into account the password policy.
     install_adminer
@@ -1661,6 +1683,7 @@ function package_ad() {
     install_godap                  # A complete terminal user interface (TUI) for LDAP
     install_powerview              # Powerview Python implementation 
     install_pysnaffler             # Snaffler, but in Python
+    install_evil-winrm-py          # Evil-Winrm, but in Python
     post_install
     end_time=$(date +%s)
     local elapsed_time=$((end_time - start_time))
