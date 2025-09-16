@@ -193,7 +193,23 @@ function install_bloodhound-ce() {
     latestRelease=$(jq --raw-output 'first(.[] | select(.tag_name | contains("-rc") | not) | .tag_name)' "${curl_tempfile}")
     git -C "${bloodhoundce_path}" clone --depth 1 --branch "${latestRelease}" "https://github.com/SpecterOps/BloodHound.git" src
     cd "${bloodhoundce_path}/src/" || exit
-    catch_and_retry VERSION=v999.999.999 CHECKOUT_HASH="" python3 ./packages/python/beagle/main.py build --verbose --ci
+    asdf set golang 1.24.4
+    go work init .
+    catch_and_retry /bin/sh -c 'VERSION=v999.999.999 CHECKOUT_HASH="" python3 ./packages/python/beagle/main.py build --verbose --ci'
+    # Force remove go and yarn cache that are not stored in standard locations
+    rm -rf "${bloodhoundce_path}/src/cache" "${bloodhoundce_path}/src/.yarn/cache"
+    VERSION_PKG="github.com/specterops/bloodhound/cmd/api/src/version"
+    git --no-pager -c 'versionsort.suffix=-rc' tag --list "v*.*.*" --sort=-v:refname | head -n 1 | sed 's/^v//' | awk \
+  -F'[.+-]' \
+  -v pkg="$VERSION_PKG" \
+  '{ major = $1; minor = $2; patch = $3; pre = ""; if ($4) pre = $4; \
+    printf("-X '\''%s.majorVersion=%s'\'' ", pkg, major); \
+    printf("-X '\''%s.minorVersion=%s'\'' ", pkg, minor); \
+    printf("-X '\''%s.patchVersion=%s'\''", pkg, patch); \
+    if (pre != "") \
+      printf(" -X '\''%s.prereleaseVersion=%s'\''", pkg, pre); \
+  }' > LDFLAGS
+    go build -C cmd/api/src -o /opt/tools/BloodHound-CE/bloodhound -ldflags "$(cat LDFLAGS)" github.com/specterops/bloodhound/cmd/api/src/cmd/bhapi
 
     ## SharpHound
     local sharphound_url
@@ -249,7 +265,6 @@ function install_bloodhound-ce() {
     # Files and directories
     # work directory required by bloodhound
     mkdir -p "${bloodhoundce_path}/work"
-    ln -v -s "${bloodhoundce_path}/src/artifacts/bhapi" "${bloodhoundce_path}/bloodhound"
     cp -v /root/sources/assets/bloodhound-ce/bloodhound-ce /opt/tools/bin/
     cp -v /root/sources/assets/bloodhound-ce/bloodhound-ce-reset /opt/tools/bin/
     cp -v /root/sources/assets/bloodhound-ce/bloodhound-ce-stop /opt/tools/bin/
@@ -348,12 +363,27 @@ function install_privexchange() {
 }
 
 function install_ruler() {
-    colorecho "Downloading ruler and form templates"
+    colorecho "Downloading ruler and form templates from source..."
     mkdir -p /opt/tools/ruler || exit
     cd /opt/tools/ruler || exit
-    asdf set golang 1.23.0
+    asdf set golang 1.24.1
     mkdir -p .go/bin
-    GOBIN=/opt/tools/ruler/.go/bin go install -v github.com/sensepost/ruler@latest
+    git clone https://github.com/sensepost/ruler.git src
+
+    # Check if cloning was successful before proceeding
+    if [ ! -d "src" ]; then
+        colorecho "ERROR: Failed to clone the ruler repository." "red"
+        exit 1
+    fi
+
+    # Navigate into the source directory
+    cd src || exit
+
+    # Install from source.
+    GOBIN=/opt/tools/ruler/.go/bin go install .
+    cd ..
+    rm -rf src
+
     asdf reshim golang
     add-aliases ruler
     add-history ruler
@@ -481,7 +511,7 @@ function install_pypykatz() {
     colorecho "Installing pypykatz"
     # without following fix, tool raises "oscrypto.errors.LibraryNotFoundError: Error detecting the version of libcrypto"
     # see https://github.com/wbond/oscrypto/issues/78 and https://github.com/wbond/oscrypto/issues/75
-    local temp_fix_limit="2025-06-01"
+    local temp_fix_limit="2025-10-01"
     if check_temp_fix_expiry "$temp_fix_limit"; then
       git -C /opt/tools/ clone --depth 1 https://github.com/skelsec/pypykatz
       cd /opt/tools/pypykatz || exit
@@ -723,7 +753,7 @@ function install_pygpoabuse() {
     pip3 install -r requirements.txt
     # without following fix, tool raises "oscrypto.errors.LibraryNotFoundError: Error detecting the version of libcrypto"
     # see https://github.com/wbond/oscrypto/issues/78 and https://github.com/wbond/oscrypto/issues/75
-    local temp_fix_limit="2025-06-01"
+    local temp_fix_limit="2025-10-01"
     if check_temp_fix_expiry "$temp_fix_limit"; then
       pip3 install --force oscrypto@git+https://github.com/wbond/oscrypto.git
     fi
@@ -824,7 +854,7 @@ function install_pkinittools() {
     pip3 install -r requirements.txt
     # without following fix, tool raises "oscrypto.errors.LibraryNotFoundError: Error detecting the version of libcrypto"
     # see https://github.com/wbond/oscrypto/issues/78 and https://github.com/wbond/oscrypto/issues/75
-    local temp_fix_limit="2025-06-01"
+    local temp_fix_limit="2025-10-01"
     if check_temp_fix_expiry "$temp_fix_limit"; then
       pip3 install --force oscrypto@git+https://github.com/wbond/oscrypto.git
     fi
@@ -836,8 +866,8 @@ function install_pkinittools() {
 }
 
 function install_pywhisker() {
-    colorecho "Installing pyWhisker"
     # CODE-CHECK-WHITELIST=add-aliases
+    colorecho "Installing pyWhisker"
     pipx install --system-site-packages git+https://github.com/ShutdownRepo/pywhisker
     add-history pywhisker
     add-test-command "pywhisker --help"
@@ -845,19 +875,19 @@ function install_pywhisker() {
 }
 
 function install_manspider() {
+    # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing Manspider"
-    git -C /opt/tools clone --depth 1 https://github.com/blacklanternsecurity/MANSPIDER.git
-    cd /opt/tools/MANSPIDER || exit
-    python3 -m venv --system-site-packages ./venv
-    source ./venv/bin/activate
-    pip3 install .
-    deactivate
-    touch ./man_spider/lib/init.py
-    sed -i "s#from .lib import#from lib import##" man_spider/manspider.py
-    add-aliases manspider
-    add-history manspider
-    add-test-command "manspider.py --help"
-    add-to-list "manspider,https://github.com/blacklanternsecurity/MANSPIDER,Manspider will crawl every share on every target system. If provided creds don't work it will fall back to 'guest' then to a null session."
+    if [[ $(uname -m) = 'x86_64' ]]
+    then
+        pipx install --system-site-packages git+https://github.com/blacklanternsecurity/MANSPIDER
+        add-history manspider
+        add-test-command "manspider --help"
+        add-to-list "manspider,https://github.com/blacklanternsecurity/MANSPIDER,Manspider will crawl every share on every target system. If provided creds don't work it will fall back to 'guest' then to a null session."
+    else
+        # https://github.com/blacklanternsecurity/MANSPIDER/issues/55
+        criticalecho-noexit "This installation function doesn't support architecture $(uname -m)" && return
+    fi
+    
 }
 
 function install_targetedKerberoast() {
@@ -1004,7 +1034,7 @@ function install_ldaprelayscan() {
     pip3 install -r requirements.txt
     # without following fix, tool raises "oscrypto.errors.LibraryNotFoundError: Error detecting the version of libcrypto"
     # see https://github.com/wbond/oscrypto/issues/78 and https://github.com/wbond/oscrypto/issues/75
-    local temp_fix_limit="2025-06-01"
+    local temp_fix_limit="2025-10-01"
     if check_temp_fix_expiry "$temp_fix_limit"; then
       pip3 install --force oscrypto@git+https://github.com/wbond/oscrypto.git
     fi
@@ -1106,11 +1136,6 @@ function install_pre2k() {
     # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing pre2k"
     pipx install --system-site-packages git+https://github.com/garrettfoster13/pre2k
-    # https://github.com/fastapi/typer/discussions/1215
-    local temp_fix_limit="2025-06-01"
-    if check_temp_fix_expiry "$temp_fix_limit"; then
-      pipx inject pre2k "click~=8.1.8" --force
-    fi
     add-history pre2k
     add-test-command "pre2k --help"
     add-to-list "pre2k,https://github.com/garrettfoster13/pre2k,pre2k is a tool to check if a Windows domain has any pre-2000 Windows 2000 logon names still in use."
@@ -1138,11 +1163,6 @@ function install_roastinthemiddle() {
     # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing roastinthemiddle"
     pipx install --system-site-packages git+https://github.com/Tw1sm/RITM
-    # https://github.com/fastapi/typer/discussions/1215
-    local temp_fix_limit="2025-06-01"
-    if check_temp_fix_expiry "$temp_fix_limit"; then
-      pipx inject ritm "click~=8.1.8" --force
-    fi
     add-history roastinthemiddle
     add-test-command "roastinthemiddle --help"
     add-to-list "roastinthemiddle,https://github.com/Tw1sm/RITM,RoastInTheMiddle is a tool to intercept and relay NTLM authentication requests."
@@ -1244,11 +1264,6 @@ function install_GPOddity() {
     # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing GPOddity"
     pipx install --system-site-packages git+https://github.com/synacktiv/GPOddity
-    # https://github.com/fastapi/typer/discussions/1215
-    local temp_fix_limit="2025-06-01"
-    if check_temp_fix_expiry "$temp_fix_limit"; then
-      pipx inject gpoddity "click~=8.1.8" --force
-    fi
     add-history GPOddity
     add-test-command "gpoddity --help"
     add-to-list "GPOddity,https://github.com/synacktiv/GPOddity,Aiming at automating GPO attack vectors through NTLM relaying (and more)"
@@ -1261,6 +1276,7 @@ function install_netexec() {
     mkdir -p ~/.nxc
     [[ -f ~/.nxc/nxc.conf ]] && mv ~/.nxc/nxc.conf ~/.nxc/nxc.conf.bak
     cp -v /root/sources/assets/netexec/nxc.conf ~/.nxc/nxc.conf
+    register-python-argcomplete nxc >> ~/.zshrc
     add-aliases netexec
     add-history netexec
     add-test-command "netexec --help"
@@ -1374,21 +1390,19 @@ function install_dploot() {
     add-to-list "dploot,https://github.com/zblurx/dploot,dploot is Python rewrite of SharpDPAPI written un C#."
 }
 
-# function install_PXEThief() {
-#     # CODE-CHECK-WHITELIST=
-#     colorecho "Installing PXEThief"
-#     git -C /opt/tools/ clone --depth 1 https://github.com/MWR-CyberSec/PXEThief
-#     cd /opt/tools/PXEThief || exit
-#     python3 -m venv ./venv
-#     source ./venv/bin/activate
-# TODO: pywin32 not found
-#     pip3 install -r requirements.txt
-#     deactivate
-#     add-aliases PXEThief
-#     add-history PXEThief
-#     add-test-command "PXEThief --help"
-#     add-to-list "PXEThief,https://github.com/MWR-CyberSec/PXEThief,PXEThief is a toolset designed to exploit vulnerabilities in Microsoft Endpoint Configuration Manager's OS Deployment enabling credential theft from network and task sequence accounts."
-# }
+function install_PXEThief() {
+    colorecho "Installing PXEThief"
+    git -C /opt/tools/ clone --depth 1 https://github.com/blurbdust/PXEThief.git
+    cd /opt/tools/PXEThief || exit
+    python3 -m venv --system-site-packages ./venv
+    source ./venv/bin/activate
+    pip3 install -r requirements.txt
+    deactivate
+    add-aliases pxethief
+    add-history pxethief
+    add-test-command "pxethief -h"
+    add-to-list "PXEThief,https://github.com/blurbdust/PXEThief,PXEThief is a set of tooling that can extract passwords from the Operating System Deployment functionality in Microsoft Endpoint Configuration Manager"
+}
 
 function install_sccmhunter() {
     colorecho "Installing sccmhunter"
@@ -1397,11 +1411,6 @@ function install_sccmhunter() {
     python3 -m venv --system-site-packages ./venv
     source ./venv/bin/activate
     pip3 install -r requirements.txt
-    # https://github.com/fastapi/typer/discussions/1215
-    local temp_fix_limit="2025-06-01"
-    if check_temp_fix_expiry "$temp_fix_limit"; then
-      pip3 install click~=8.1.8
-    fi
     deactivate
     add-aliases sccmhunter
     add-history sccmhunter
@@ -1437,6 +1446,20 @@ function install_sccmwtf() {
     add-to-list "sccmwtf,https://github.com/xpn/sccmwtf,This code is designed for exploring SCCM in a lab."
 }
 
+function install_cmloot() {
+    colorecho "Installing cmloot"
+    git -C /opt/tools/ clone --depth 1 https://github.com/shelltrail/cmloot.git
+    cd /opt/tools/cmloot || exit
+    python3 -m venv --system-site-packages ./venv
+    source ./venv/bin/activate
+    pip3 install -r requirements.txt
+    deactivate
+    add-aliases cmloot
+    add-history cmloot
+    add-test-command "cmloot -h"
+    add-to-list "cmloot,https://github.com/shelltrail/cmloot,cmloot.py is built to aid penetration testers to search and find sensitive files in Configuration Manager's complex file share structure."
+}
+
 function install_smbclientng() {
     # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing smbclient-ng"
@@ -1450,11 +1473,6 @@ function install_conpass() {
     # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing conpass"
     pipx install --system-site-packages git+https://github.com/login-securite/conpass
-    # https://github.com/fastapi/typer/discussions/1215
-    local temp_fix_limit="2025-06-01"
-    if check_temp_fix_expiry "$temp_fix_limit"; then
-      pipx inject conpass "click~=8.1.8" --force
-    fi
     add-history conpass
     add-test-command "conpass --help"
     add-to-list "conpass,https://github.com/login-securite/conpass,Python tool for continuous password spraying taking into account the password policy."
@@ -1469,6 +1487,44 @@ function install_adminer() {
     add-to-list "AD-miner,https://github.com/Mazars-Tech/AD_Miner,Active Directory audit tool that leverages cypher queries."
 }
 
+function install_goexec() {
+    colorecho "Installing GoExec"
+    mkdir -p /opt/tools/goexec || exit
+    cd /opt/tools/goexec || exit
+    asdf set golang 1.24.1
+    mkdir -p .go/bin
+    GOBIN=/opt/tools/goexec/.go/bin CGO_ENABLED=0 go install -ldflags='-s -w' -v github.com/FalconOpsLLC/goexec@latest
+    asdf reshim golang
+    add-aliases goexec
+    add-history goexec
+    add-test-command "goexec --help"
+    add-to-list "GoExec,https://github.com/FalconOpsLLC/goexec,GoExec is a new take on some of the methods used to gain remote execution on Windows devices. GoExec implements a number of largely unrealized execution methods and provides significant OPSEC improvements overall"
+}
+
+function install_remotemonologue() {
+    colorecho "Installing RemoteMonologue"
+    git -C /opt/tools/ clone --depth 1 https://github.com/3lp4tr0n/RemoteMonologue
+    cd /opt/tools/RemoteMonologue || exit
+    python3 -m venv --system-site-packages ./venv
+    source ./venv/bin/activate
+    pip3 install impacket
+    deactivate
+    add-aliases remotemonologue
+    add-history remotemonologue
+    add-test-command "remotemonologue.py --help"
+    add-to-list "RemoteMonologue,https://github.com/3lp4tr0n/RemoteMonologue,A tool to coerce NTLM authentications via DCOM"
+}
+
+function install_godap() {
+    # CODE-CHECK-WHITELIST=add-aliases
+    colorecho "Installing godap"
+    go install -v github.com/Macmod/godap@latest
+    asdf reshim golang
+    add-history godap
+    add-test-command "godap --help"
+    add-to-list "godap,https://github.com/Macmod/godap,A complete TUI for LDAP."
+}
+
 function install_powerview() {
     # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing powerview.py"
@@ -1479,12 +1535,26 @@ function install_powerview() {
 }
 
 function install_pysnaffler(){
-    # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing pysnaffler"
-    pipx install --system-site-packages git+https://github.com/skelsec/pysnaffler
+    git -C /opt/tools/ clone --depth 1 https://github.com/skelsec/pysnaffler
+    cd /opt/tools/pysnaffler || exit
+    python3.13 -m venv --system-site-packages ./venv
+    source ./venv/bin/activate
+    pip3 install .
+    deactivate
+    add-aliases pysnaffler
     add-history pysnaffler
     add-test-command "pysnaffler --help"
     add-to-list "pysnaffler,https://github.com/skelsec/pysnaffler,Snaffler. But in python."
+}
+
+function install_evil-winrm-py() {
+    # CODE-CHECK-WHITELIST=add-aliases
+    colorecho "Installing evil-winrm-py"
+    pipx install --system-site-package 'evil-winrm-py[kerberos]@git+https://github.com/adityatelange/evil-winrm-py'
+    add-history evil-winrm-py
+    add-test-command "evil-winrm-py --help"
+    add-to-list "evil-winrm-py,https://github.com/adityatelange/evil-winrm-py,Evil-WinRM. But in python"
 }
 
 # Package dedicated to internal Active Directory tools
@@ -1588,15 +1658,20 @@ function package_ad() {
     install_bloodyAD               # Active Directory privilege escalation swiss army knife.
     install_autobloody             # Automatically exploit Active Directory privilege escalation paths.
     install_dploot                 # Python rewrite of SharpDPAPI written un C#.
-    # install_PXEThief             # TODO: pywin32 not found - PXEThief is a toolset designed to exploit vulnerabilities in Microsoft Endpoint Configuration Manager's OS Deployment, enabling credential theft from network and task sequence accounts.
+    install_PXEThief
     install_sccmhunter             # SCCMHunter is a post-ex tool built to streamline identifying, profiling, and attacking SCCM related assets in an Active Directory domain.
     install_sccmsecrets
     install_sccmwtf                # This code is designed for exploring SCCM in a lab.
+    install_cmloot
     install_smbclientng
     install_conpass                # Python tool for continuous password spraying taking into account the password policy.
     install_adminer
+    install_goexec                 # Go version of *exec (smb,dcom...) from impacket with stronger OPSEC
+    install_remotemonologue        # A tool to coerce NTLM authentications via DCOM
+    install_godap                  # A complete terminal user interface (TUI) for LDAP
     install_powerview              # Powerview Python implementation 
     install_pysnaffler             # Snaffler, but in Python
+    install_evil-winrm-py          # Evil-Winrm, but in Python
     post_install
     end_time=$(date +%s)
     local elapsed_time=$((end_time - start_time))
