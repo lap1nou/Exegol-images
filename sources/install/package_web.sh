@@ -903,6 +903,23 @@ function install_zap() {
     add-test-command "zap -suppinfo"
     add-to-list "Zed Attack Proxy (ZAP),https://www.zaproxy.org/,Web application security testing tool."
 }
+
+function install_caido() {
+    # CODE-CHECK-WHITELIST=add-aliases
+    colorecho "Installing Caido"
+    mkdir /opt/tools/caido
+    # Get the link of the last version in deb format
+    local caido_latest_download_deb=$(curl -s https://api.caido.io/releases/latest | jq -r --arg arch "linux-$(uname -m).deb" '.links[].link | select(endswith($arch))')
+    # Get the file name
+    local caido_file_name=$(basename $caido_latest_download_deb)
+    # Download the deb file and store it into /opt/tools/caido
+    wget $caido_latest_download_deb -O /opt/tools/caido/$caido_file_name
+    # Install
+    dpkg -i "/opt/tools/caido/$caido_file_name"
+    add-history caido
+    add-test-command "which caido"
+    add-to-list "caido,https://docs.caido.io/quickstart/,A lightweight web security auditing toolkit."
+}
     
 function install_token_exploiter() {
     # CODE-CHECK-WHITELIST=add-aliases,add-history
@@ -1001,6 +1018,7 @@ function package_web() {
     install_katana                  # A next-generation crawling and spidering framework
     install_postman                 # Postman - API platform for testing APIs
     install_zap                     # Zed Attack Proxy
+    install_caido                   # Caido
     install_token_exploiter         # Github personal token Analyzer
     install_bbot                    # Recursive Scanner
     post_install
