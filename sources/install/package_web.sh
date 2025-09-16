@@ -759,6 +759,7 @@ function install_naabu() {
 }
 
 function install_burpsuite() {
+    # CODE-CHECK-WHITELIST=add-test-command
     colorecho "Installing Burp"
     mkdir /opt/tools/BurpSuiteCommunity
     # using $(which curl) to avoid having additional logs put in curl output being executed because of catch_and_retry
@@ -776,7 +777,7 @@ function install_burpsuite() {
     ln -v -s /opt/tools/BurpSuiteCommunity/trust-ca-burp.sh /opt/tools/bin/trust-ca-burp
     add-aliases burpsuite
     add-history burpsuite
-    add-test-command "which burpsuite"
+    add-test-gui-command "burpsuite"
     add-to-list "burpsuite,https://portswigger.net/burp,Web application security testing tool."
 }
 
@@ -868,7 +869,7 @@ function install_katana() {
 }
 
 function install_postman() {
-    # CODE-CHECK-WHITELIST=add-aliases
+    # CODE-CHECK-WHITELIST=add-aliases,add-test-command
     colorecho "Installing Postman"
     local archive_name
     if [[ $(uname -m) = 'x86_64' ]]; then
@@ -884,7 +885,7 @@ function install_postman() {
     ln -s /opt/tools/postman/app/Postman /opt/tools/bin/postman
     fapt libsecret-1-0
     add-history postman
-    add-test-command "which postman"
+    add-test-gui-command "postman"
     add-to-list "postman,https://www.postman.com/,API platform for testing APIs"
 }
 

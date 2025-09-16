@@ -38,6 +38,7 @@ function filesystem() {
     colorecho "Preparing filesystem"
     mkdir -p /opt/tools/bin/ /data/ /var/log/exegol /.exegol/ /opt/rules/ /opt/lists
     touch /.exegol/unit_tests_all_commands.txt
+    touch /.exegol/unit_tests_gui_commands.txt
     touch /.exegol/installed_tools.csv
     echo "Tool,Link,Description" >> /.exegol/installed_tools.csv
 }

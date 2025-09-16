@@ -32,9 +32,9 @@ function install_network_apt_tools() {
     add-test-command "iptables --version"                           # iptables for the win
     add-test-command "traceroute --help"                            # ping ping
     add-test-command "dns2tcpc|& grep 'Usage : dns2tcpc'"           # TCP tunnel over DNS
-    add-test-command "which xfreerdp"
+    add-test-command "xfreerdp --help"
     add-test-command "rdesktop|& grep 'Usage: rdesktop'"
-    add-test-command "which xtightvncviewer"
+    add-test-gui-command "xtightvncviewer"
     add-test-command "hydra -h |& grep 'more command line options'" # Login scanner
     add-test-command "mariadb --version"                            # Mariadb client
     add-test-command "redis-cli --version"                          # Redis protocol
@@ -139,7 +139,7 @@ function install_autorecon() {
     add-history autorecon
     # test below cannot work because test runner cannot have a valid display
     # add-test-command "autorecon --version"
-    add-test-command "which autorecon"
+    add-test-command "autorecon --help"
     add-to-list "autorecon,https://github.com/Tib3rius/AutoRecon,Multi-threaded network reconnaissance tool which performs automated enumeration of services."
 }
 
