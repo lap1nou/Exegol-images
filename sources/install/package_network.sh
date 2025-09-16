@@ -261,14 +261,7 @@ function install_ligolo-ng() {
 function install_rustscan() {
     # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing RustScan"
-    git -C /opt/tools/ clone --depth 1 https://github.com/RustScan/RustScan.git
-    cd /opt/tools/RustScan || exit
-    # Sourcing rustup shell setup, so that rust binaries are found when installing cme
-    source "$HOME/.cargo/env"
-    cargo build --release
-    # Clean dependencies used to build the binary
-    rm -rf target/release/{deps,build,.fingerprint}
-    ln -s /opt/tools/RustScan/target/release/rustscan /opt/tools/bin/rustscan
+    cargo binstall -y rustscan
     add-history rustscan
     add-test-command "rustscan --help"
     add-to-list "rustscan,https://github.com/RustScan/RustScan,The Modern Port Scanner"
@@ -278,12 +271,7 @@ function install_legba() {
     # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing legba"
     fapt libsmbclient-dev libsmbclient
-    git -C /opt/tools/ clone --depth 1 https://github.com/evilsocket/legba
-    cd /opt/tools/legba || exit
-    cargo build --release
-    # Clean dependencies used to build the binary
-    rm -rf target/release/{deps,build,.fingerprint}
-    ln -s /opt/tools/legba/target/release/legba /opt/tools/bin/legba
+    cargo install legba
     add-history legba
     add-test-command "legba --help"
     add-to-list "legba,https://github.com/evilsocket/legba,a multiprotocol credentials bruteforcer / password sprayer and enumerator built with Rust"
