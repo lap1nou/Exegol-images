@@ -363,12 +363,27 @@ function install_privexchange() {
 }
 
 function install_ruler() {
-    colorecho "Downloading ruler and form templates"
+    colorecho "Downloading ruler and form templates from source..."
     mkdir -p /opt/tools/ruler || exit
     cd /opt/tools/ruler || exit
     asdf set golang 1.24.1
     mkdir -p .go/bin
-    GOBIN=/opt/tools/ruler/.go/bin go install -v github.com/sensepost/ruler@latest
+    git clone https://github.com/sensepost/ruler.git src
+
+    # Check if cloning was successful before proceeding
+    if [ ! -d "src" ]; then
+        colorecho "ERROR: Failed to clone the ruler repository." "red"
+        exit 1
+    fi
+
+    # Navigate into the source directory
+    cd src || exit
+
+    # Install from source.
+    GOBIN=/opt/tools/ruler/.go/bin go install .
+    cd ..
+    rm -rf src
+
     asdf reshim golang
     add-aliases ruler
     add-history ruler
