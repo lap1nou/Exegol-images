@@ -939,18 +939,29 @@ function install_caido() {
     # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing Caido"
     mkdir /opt/tools/caido
-    # Get the link of the last version in deb format
-    local caido_latest_download_deb
-    caido_latest_download_deb=$(curl -s https://api.caido.io/releases/latest | jq -r --arg arch "linux-$(uname -m).deb" '.links[].link | select(endswith($arch))')
-    # Get the file name
+    local arch
+    arch=$(uname -m)
+    local caido_json
+    caido_json=$(curl -s https://api.caido.io/releases/latest)
+
+    # Desktop
+    local caido_deb
+    caido_deb=$(echo "$caido_json" | grep -o '"link":"[^"]*"' | cut -d'"' -f4 | grep "linux-${arch}\.deb$")
     local caido_file_name
-    caido_file_name=$(basename "$caido_latest_download_deb")
-    # Download the deb file and store it into /opt/tools/caido
+    caido_file_name=$(basename "$caido_deb")
     wget "$caido_latest_download_deb" -O "/opt/tools/caido/$caido_file_name"
-    # Install
     dpkg -i /opt/tools/caido/"$caido_file_name"
+
+    # CLI
+    caido_cli=$(echo "$caido_json" | grep -o '"link":"[^"]*"' | cut -d'"' -f4 | grep "caido-cli-v.*-linux-${arch}\.tar\.gz$")
+    local caido_file_name_cli
+    caido_file_name_cli=$(basename "$caido_cli")
+    wget "$caido_cli" -O "/opt/tools/caido/$caido_file_name_cli"
+    tar -xvzf /opt/tools/caido/caido-cli-v0.51.1-linux-aarch64.tar.gz -C /opt/tools/bin/
+    
     add-history caido
-    add-test-command "which caido"
+    add-test-gui-command "caido --no-sandbox"
+    add-test-command "caido-cli --help"
     add-to-list "caido,https://docs.caido.io/quickstart/,A lightweight web security auditing toolkit."
 }
     
