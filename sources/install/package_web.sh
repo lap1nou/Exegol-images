@@ -949,7 +949,7 @@ function install_caido() {
     caido_deb=$(echo "$caido_json" | grep -o '"link":"[^"]*"' | cut -d'"' -f4 | grep "linux-${arch}\.deb$")
     local caido_file_name
     caido_file_name=$(basename "$caido_deb")
-    wget "$caido_latest_download_deb" -O "/opt/tools/caido/$caido_file_name"
+    wget "$caido_deb" -O "/opt/tools/caido/$caido_file_name"
     dpkg -i /opt/tools/caido/"$caido_file_name"
 
     # CLI
