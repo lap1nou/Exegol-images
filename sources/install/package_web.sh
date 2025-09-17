@@ -938,6 +938,7 @@ function install_zap() {
 function install_caido() {
     # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing Caido"
+    fapt libxss1
     mkdir /opt/tools/caido
     local arch
     arch=$(uname -m)
