@@ -220,7 +220,7 @@ function install_glow() {
     local version
     colorecho "Installing glow"
     url=$(curl --location --silent --output /dev/null --write-out "%{url_effective}" https://github.com/charmbracelet/glow/releases/latest)    version=${url##*v}
-    wget https://github.com/charmbracelet/glow/releases/download/v${version}/glow_${version}_Linux_x86_64.tar.gz -O /tmp/glow.tar.gz
+    wget "https://github.com/charmbracelet/glow/releases/download/v${version}/glow_${version}_Linux_x86_64.tar.gz" -O /tmp/glow.tar.gz
     tar -xvf /tmp/glow.tar.gz
     cp "glow_${version}_Linux_x86_64/glow" "/opt/tools/bin"
     rm -f /tmp/glow.tar.gz

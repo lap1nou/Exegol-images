@@ -944,9 +944,9 @@ function install_caido() {
     caido_latest_download_deb=$(curl -s https://api.caido.io/releases/latest | jq -r --arg arch "linux-$(uname -m).deb" '.links[].link | select(endswith($arch))')
     # Get the file name
     local caido_file_name
-    caido_file_name=$(basename $caido_latest_download_deb)
+    caido_file_name=$(basename "$caido_latest_download_deb")
     # Download the deb file and store it into /opt/tools/caido
-    wget "$caido_latest_download_deb" -O /opt/tools/caido/$caido_file_name
+    wget "$caido_latest_download_deb" -O "/opt/tools/caido/$caido_file_name"
     # Install
     dpkg -i /opt/tools/caido/"$caido_file_name"
     add-history caido
