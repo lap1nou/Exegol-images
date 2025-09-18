@@ -280,7 +280,12 @@ function install_legba() {
     # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing legba"
     fapt libsmbclient-dev libsmbclient
-    cargo install legba
+    git -C /opt/tools/ clone --depth 1 https://github.com/evilsocket/legba
+    cd /opt/tools/legba || exit
+    cargo build --release
+    # Clean dependencies used to build the binary
+    rm -rf target/release/{deps,build,.fingerprint}
+    ln -s /opt/tools/legba/target/release/legba /opt/tools/bin/legba
     add-history legba
     add-test-command "legba --help"
     add-to-list "legba,https://github.com/evilsocket/legba,a multiprotocol credentials bruteforcer / password sprayer and enumerator built with Rust"
