@@ -47,6 +47,11 @@ function add-test-command() {
     echo "$*" >> "/.exegol/unit_tests_all_commands.txt"
 }
 
+function add-test-gui-command() {
+    colorecho "Adding build pipeline test gui command: $*"
+    echo "$*" >> "/.exegol/unit_tests_gui_commands.txt"
+}
+
 function fapt() {
     colorecho "Installing apt package(s): $*"
     # Do apt-get update only when no list are found

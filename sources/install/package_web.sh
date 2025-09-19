@@ -58,7 +58,7 @@ function install_wfuzz() {
     mkdir /usr/share/wfuzz
     git -C /tmp clone --depth 1 https://github.com/xmendez/wfuzz.git
     # Wait for fix / PR to be merged: https://github.com/xmendez/wfuzz/issues/366
-    local temp_fix_limit="2025-09-01"
+    local temp_fix_limit="2025-10-01"
     if check_temp_fix_expiry "$temp_fix_limit"; then
       pip3 install pycurl  # remove this line and uncomment the first when issue is fix
       sed -i 's/pyparsing>=2.4\*;/pyparsing>=2.4.2;/' /tmp/wfuzz/setup.py
@@ -171,6 +171,7 @@ function install_nosqlmap() {
     git -C /opt/tools clone --depth 1 https://github.com/codingo/NoSQLMap.git
     cd /opt/tools/NoSQLMap || exit
     virtualenv --python python2 ./venv
+    sed -i 's/requests==2\.32\.4/requests==2.27.1/' setup.py
     catch_and_retry ./venv/bin/python2 setup.py install
     # https://github.com/codingo/NoSQLMap/issues/126
     rm -rf venv/lib/python2.7/site-packages/certifi-2023.5.7-py2.7.egg
@@ -727,6 +728,36 @@ function install_httpx() {
     add-to-list "httpx,https://github.com/projectdiscovery/httpx,A tool for identifying web technologies and vulnerabilities / including outdated software versions and weak encryption protocols."
 }
 
+function install_alterx() {
+    # CODE-CHECK-WHITELIST=add-aliases
+    colorecho "Installing alterx"
+    go install -v github.com/projectdiscovery/alterx/cmd/alterx@latest
+    asdf reshim golang
+    add-history alterx
+    add-test-command "alterx --help"
+    add-to-list "alterx,https://github.com/projectdiscovery/alterx,A tool for fast and customizable subdomain wordlist generator using DSL from ProjectDiscovery."
+}
+
+function install_chaos() {
+    # CODE-CHECK-WHITELIST=add-aliases
+    colorecho "Installing chaos"
+    go install -v github.com/projectdiscovery/chaos-client/cmd/chaos@latest
+    asdf reshim golang
+    add-history chaos
+    add-test-command "chaos --help"
+    add-to-list "chaos,https://github.com/projectdiscovery/alterx,A Go client to communicate with Chaos dataset API from ProjectDiscovery."
+}
+
+function install_uncover() {
+    # CODE-CHECK-WHITELIST=add-aliases
+    colorecho "Installing uncover"
+    go install -v github.com/projectdiscovery/uncover/cmd/uncover@latest
+    asdf reshim golang
+    add-history uncover
+    add-test-command "uncover --help"
+    add-to-list "uncover,https://github.com/projectdiscovery/uncover,A tool to Quickly discover exposed hosts on the internet using multiple search engines from ProjectDiscovery."
+}
+
 function install_anew() {
     # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing anew"
@@ -758,6 +789,7 @@ function install_naabu() {
 }
 
 function install_burpsuite() {
+    # CODE-CHECK-WHITELIST=add-test-command
     colorecho "Installing Burp"
     mkdir /opt/tools/BurpSuiteCommunity
     # using $(which curl) to avoid having additional logs put in curl output being executed because of catch_and_retry
@@ -775,7 +807,7 @@ function install_burpsuite() {
     ln -v -s /opt/tools/BurpSuiteCommunity/trust-ca-burp.sh /opt/tools/bin/trust-ca-burp
     add-aliases burpsuite
     add-history burpsuite
-    add-test-command "which burpsuite"
+    add-test-gui-command "burpsuite"
     add-to-list "burpsuite,https://portswigger.net/burp,Web application security testing tool."
 }
 
@@ -867,7 +899,7 @@ function install_katana() {
 }
 
 function install_postman() {
-    # CODE-CHECK-WHITELIST=add-aliases
+    # CODE-CHECK-WHITELIST=add-aliases,add-test-command
     colorecho "Installing Postman"
     local archive_name
     if [[ $(uname -m) = 'x86_64' ]]; then
@@ -883,7 +915,7 @@ function install_postman() {
     ln -s /opt/tools/postman/app/Postman /opt/tools/bin/postman
     fapt libsecret-1-0
     add-history postman
-    add-test-command "which postman"
+    add-test-gui-command "postman"
     add-to-list "postman,https://www.postman.com/,API platform for testing APIs"
 }
 
@@ -911,6 +943,37 @@ function install_zap() {
     add-history zaproxy
     add-test-command "zap -suppinfo"
     add-to-list "Zed Attack Proxy (ZAP),https://www.zaproxy.org/,Web application security testing tool."
+}
+
+function install_caido() {
+    # CODE-CHECK-WHITELIST=add-aliases
+    colorecho "Installing Caido"
+    fapt libxss1
+    mkdir /opt/tools/caido
+    local arch
+    arch=$(uname -m)
+    local caido_json
+    caido_json=$(curl -s https://api.caido.io/releases/latest)
+
+    # Desktop
+    local caido_deb
+    caido_deb=$(echo "$caido_json" | grep -o '"link":"[^"]*"' | cut -d'"' -f4 | grep "linux-${arch}\.deb$")
+    local caido_file_name
+    caido_file_name=$(basename "$caido_deb")
+    wget "$caido_deb" -O "/opt/tools/caido/$caido_file_name"
+    dpkg -i /opt/tools/caido/"$caido_file_name"
+
+    # CLI
+    caido_cli=$(echo "$caido_json" | grep -o '"link":"[^"]*"' | cut -d'"' -f4 | grep "caido-cli-v.*-linux-${arch}\.tar\.gz$")
+    local caido_file_name_cli
+    caido_file_name_cli=$(basename "$caido_cli")
+    wget "$caido_cli" -O "/opt/tools/caido/$caido_file_name_cli"
+    tar -xvzf "/opt/tools/caido/$caido_file_name_cli" -C /opt/tools/bin/
+    
+    add-history caido
+    add-test-gui-command "caido --no-sandbox"
+    add-test-command "caido-cli --help"
+    add-to-list "caido,https://docs.caido.io/quickstart/,A lightweight web security auditing toolkit."
 }
     
 function install_token_exploiter() {
@@ -995,6 +1058,9 @@ function package_web() {
     install_hakrevdns               # Reverse DNS lookups
     install_httprobe                # Probe http
     install_httpx                   # Probe http
+    install_alterx                  # Subdomain wordlist generator
+    install_chaos                   # Exposed hosts discovery using multiple search engines
+    install_uncover                 # Quickly discover exposed hosts on the internet using multiple search engines.
     install_anew                    # A tool for adding new lines to files, skipping duplicates
     install_robotstester            # Robots.txt scanner
     install_naabu                   # Fast port scanner
@@ -1011,6 +1077,7 @@ function package_web() {
     install_postman                 # Postman - API platform for testing APIs
     install_wpprobe                 # WPProbe - Tool for detecting WordPress plugins using misconfigured REST API endpoints
     install_zap                     # Zed Attack Proxy
+    install_caido                   # Caido
     install_token_exploiter         # Github personal token Analyzer
     install_bbot                    # Recursive Scanner
     post_install

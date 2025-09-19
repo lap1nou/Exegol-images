@@ -15,7 +15,7 @@ function install_exegol-history() {
     cd /opt/tools/Exegol-history || exit
     pipx install --system-site-packages /opt/tools/Exegol-history
     # Temp fix add default profile.sh back to root directory
-    if check_temp_fix_expiry "2025-09-01"; then
+    if check_temp_fix_expiry "2025-10-01"; then
       [ -f /opt/tools/Exegol-history/profile.sh ] || cp /opt/tools/Exegol-history/exegol_history/config/profile.sh /opt/tools/Exegol-history/profile.sh
     fi
     add-aliases exegol-history
@@ -31,6 +31,9 @@ function install_rust_cargo() {
     curl https://sh.rustup.rs -sSf -o /tmp/rustup.sh
     sh /tmp/rustup.sh -y
     source "$HOME/.cargo/env"
+    # Fast rust crate installation helper
+    curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh -o /tmp/install-from-binstall-release.sh
+    sh /tmp/install-from-binstall-release.sh
     add-test-command "cargo --version"
 }
 
@@ -38,6 +41,7 @@ function filesystem() {
     colorecho "Preparing filesystem"
     mkdir -p /opt/tools/bin/ /data/ /var/log/exegol /.exegol/ /opt/rules/ /opt/lists
     touch /.exegol/unit_tests_all_commands.txt
+    touch /.exegol/unit_tests_gui_commands.txt
     touch /.exegol/installed_tools.csv
     echo "Tool,Link,Description" >> /.exegol/installed_tools.csv
 }
@@ -46,13 +50,15 @@ function install_go() {
     # CODE-CHECK-WHITELIST=add-aliases,add-to-list,add-history
     colorecho "Installing go (Golang)"
     asdf plugin add golang https://github.com/asdf-community/asdf-golang.git
-    # 1.19 needed by sliver
-    asdf install golang 1.19
+    # 1.19 needed by sliver (not now ?)
+    # asdf install golang 1.19
     #asdf install golang latest
     #asdf set --home golang latest
     # With golang 1.23 many package build are broken, temp fix to use 1.22.2 as golang latest
-    local temp_fix_limit="2025-09-01"
+    local temp_fix_limit="2025-10-01"
     if check_temp_fix_expiry "$temp_fix_limit"; then
+      # 1.24.4 needed for BloodHound-CE
+      asdf install golang 1.24.4
       # 1.24.1 needed for GoExec
       asdf install golang 1.24.1
       # 1.23 needed by BloodHound-CE, and sensepost/ruler
@@ -294,7 +300,7 @@ function install_mdcat() {
     # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing mdcat"
     source "$HOME/.cargo/env"
-    cargo install mdcat
+    cargo binstall -y mdcat
     add-history mdcat
     add-test-command "mdcat --version"
     add-to-list "mdcat,https://github.com/swsnr/mdcat,Fancy cat for Markdown"
@@ -498,7 +504,7 @@ function package_base() {
     cp -v /root/sources/assets/apt/preferences.d/* /etc/apt/preferences.d/
     apt-get update
     colorecho "Starting main programs install"
-    fapt man git lsb-release pciutils pkg-config zip unzip kmod gnupg2 wget \
+    fapt man git gh glab subversion lsb-release pciutils pkg-config zip unzip kmod gnupg2 wget \
     libffi-dev zsh asciinema npm gem automake autoconf make cmake time gcc g++ file lsof \
     less x11-apps net-tools vim nano jq iputils-ping iproute2 tidy mlocate libtool \
     dos2unix ftp sshpass telnet nfs-common ncat netcat-traditional socat rdate putty \
@@ -506,7 +512,7 @@ function package_base() {
     nim perl libwww-perl openjdk-17-jdk \
     logrotate tmux tldr bat libxml2-utils virtualenv chromium libsasl2-dev \
     libldap2-dev libssl-dev isc-dhcp-client sqlite3 dnsutils samba ssh snmp faketime php \
-    python3 python3-dev grc emacs-nox xsel xxd libnss3-tools
+    python3 python3-dev grc emacs-nox xsel xxd libnss3-tools htop ripgrep
     apt-mark hold tzdata  # Prevent apt upgrade error when timezone sharing is enable
 
     filesystem
