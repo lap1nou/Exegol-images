@@ -807,7 +807,7 @@ function install_burpsuite() {
     ln -v -s /opt/tools/BurpSuiteCommunity/trust-ca-burp.sh /opt/tools/bin/trust-ca-burp
     add-aliases burpsuite
     add-history burpsuite
-    add-test-gui-command "burpsuite"
+    add-test-gui-command "BurpSuiteCommunity"
     add-to-list "burpsuite,https://portswigger.net/burp,Web application security testing tool."
 }
 
