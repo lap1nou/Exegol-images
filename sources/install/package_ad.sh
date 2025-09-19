@@ -1159,6 +1159,11 @@ function install_roastinthemiddle() {
     # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing roastinthemiddle"
     pipx install --system-site-packages git+https://github.com/Tw1sm/RITM
+    # https://github.com/Tw1sm/RITM/pull/4
+    local temp_fix_limit="2025-10-01"
+    if check_temp_fix_expiry "$temp_fix_limit"; then
+        pipx inject RITM "click==8.1.8" --force
+    fi
     add-history roastinthemiddle
     add-test-command "roastinthemiddle --help"
     add-to-list "roastinthemiddle,https://github.com/Tw1sm/RITM,RoastInTheMiddle is a tool to intercept and relay NTLM authentication requests."
