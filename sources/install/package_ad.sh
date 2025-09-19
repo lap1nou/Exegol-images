@@ -1469,6 +1469,11 @@ function install_conpass() {
     # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing conpass"
     pipx install --system-site-packages git+https://github.com/login-securite/conpass
+    # https://github.com/login-securite/conpass/pull/5
+    local temp_fix_limit="2025-10-01"
+    if check_temp_fix_expiry "$temp_fix_limit"; then
+        pipx inject conpass "click==8.1.8" --force
+    fi
     add-history conpass
     add-test-command "conpass --help"
     add-to-list "conpass,https://github.com/login-securite/conpass,Python tool for continuous password spraying taking into account the password policy."
