@@ -789,7 +789,6 @@ function install_naabu() {
 }
 
 function install_burpsuite() {
-    # CODE-CHECK-WHITELIST=add-test-command
     colorecho "Installing Burp"
     mkdir /opt/tools/BurpSuiteCommunity
     # using $(which curl) to avoid having additional logs put in curl output being executed because of catch_and_retry
@@ -807,7 +806,8 @@ function install_burpsuite() {
     ln -v -s /opt/tools/BurpSuiteCommunity/trust-ca-burp.sh /opt/tools/bin/trust-ca-burp
     add-aliases burpsuite
     add-history burpsuite
-    add-test-gui-command "BurpSuiteCommunity"
+    add-test-command "which burpsuite"
+    #add-test-gui-command "BurpSuiteCommunity"
     add-to-list "burpsuite,https://portswigger.net/burp,Web application security testing tool."
 }
 
@@ -899,7 +899,7 @@ function install_katana() {
 }
 
 function install_postman() {
-    # CODE-CHECK-WHITELIST=add-aliases,add-test-command
+    # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing Postman"
     local archive_name
     if [[ $(uname -m) = 'x86_64' ]]; then
@@ -915,7 +915,8 @@ function install_postman() {
     ln -s /opt/tools/postman/app/Postman /opt/tools/bin/postman
     fapt libsecret-1-0
     add-history postman
-    add-test-gui-command "postman"
+    add-test-command "which postman"
+    #add-test-gui-command "postman"
     add-to-list "postman,https://www.postman.com/,API platform for testing APIs"
 }
 
@@ -927,22 +928,6 @@ function install_wpprobe() {
     add-history wpprobe
     add-test-command "wpprobe --help"
     add-to-list "wpprobe,https://github.com/Chocapikk/wpprobe,A fast WordPress plugin enumeration tool."
-}
-
-function install_zap() {
-    colorecho "Installing ZAP"
-    local URL
-    URL=$(curl --location --silent "https://api.github.com/repos/zaproxy/zaproxy/releases/latest" | grep 'browser_download_url.*ZAP.*tar.gz"' | grep -o 'https://[^"]*')
-    curl --location -o /tmp/ZAP.tar.gz "$URL"
-    tar -xf /tmp/ZAP.tar.gz --directory /tmp
-    rm /tmp/ZAP.tar.gz
-    mv /tmp/ZAP* /opt/tools/zaproxy
-    ln -s /opt/tools/zaproxy/zap.sh /opt/tools/bin/zap
-    zap -cmd -addonupdate
-    add-aliases zaproxy
-    add-history zaproxy
-    add-test-command "zap -suppinfo"
-    add-to-list "Zed Attack Proxy (ZAP),https://www.zaproxy.org/,Web application security testing tool."
 }
 
 function install_caido() {
@@ -1076,7 +1061,6 @@ function package_web() {
     install_katana                  # A next-generation crawling and spidering framework
     install_postman                 # Postman - API platform for testing APIs
     install_wpprobe                 # WPProbe - Tool for detecting WordPress plugins using misconfigured REST API endpoints
-    install_zap                     # Zed Attack Proxy
     install_caido                   # Caido
     install_token_exploiter         # Github personal token Analyzer
     install_bbot                    # Recursive Scanner
