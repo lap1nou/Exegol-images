@@ -33,7 +33,6 @@ function install_network_apt_tools() {
     add-test-command "traceroute --help"                            # ping ping
     add-test-command "dns2tcpc|& grep 'Usage : dns2tcpc'"           # TCP tunnel over DNS
     add-test-command "rdesktop|& grep 'Usage: rdesktop'"
-    add-test-gui-command "xtightvncviewer"
     add-test-command "hydra -h |& grep 'more command line options'" # Login scanner
     add-test-command "mariadb --version"                            # Mariadb client
     add-test-command "redis-cli --version"                          # Redis protocol
