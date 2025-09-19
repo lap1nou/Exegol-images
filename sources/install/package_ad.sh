@@ -1289,7 +1289,7 @@ function install_extractbitlockerkeys() {
     deactivate
     add-aliases extractbitlockerkeys
     add-history extractbitlockerkeys
-    add-test-command "ExtractBitlockerKeys.py|& grep 'usage: ExtractBitlockerKeys.py'"
+    add-test-command "ExtractBitlockerKeys.py -h"
     add-to-list "ExtractBitlockerKeys,https://github.com/p0dalirius/ExtractBitlockerKeys,A system administration or post-exploitation script to automatically extract the bitlocker recovery keys from a domain."
 }
 
