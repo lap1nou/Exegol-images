@@ -177,11 +177,11 @@ function install_chisel() {
 }
 
 function install_penelope() {
-    # CODE-CHECK-WHITELIST=add-aliases,add-test-command
+    # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing Penelope"
     pipx install --system-site-packages git+https://github.com/brightio/penelope.git
     add-history penelope 
-    add-test-gui-command "penelope" 
+    add-test-command "which penelope.py" 
     add-to-list "penelope,https://github.com/brightio/penelope,Penelope is a shell handler designed to be easy to use and intended to replace netcat when exploiting RCE vulnerabilities."
 }
 
