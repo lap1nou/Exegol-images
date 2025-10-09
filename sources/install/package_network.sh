@@ -233,7 +233,7 @@ function install_massdns() {
     git -C /opt/tools clone --depth 1 https://github.com/blechschmidt/massdns.git
     cd /opt/tools/massdns || exit
     make
-    ln -s /opt/tools/massdns/bin/massdns /usr/bin/massdns
+    ln -s /opt/tools/massdns/bin/massdns /opt/tools/bin/massdns
     add-history massdns
     add-test-command "massdns --help"
     add-to-list "massdns,https://github.com/blechschmidt/massdns,MassDNS is a simple high-performance DNS stub resolver targeting those who seek to resolve a massive amount of domain names in the order of millions or even billions."
