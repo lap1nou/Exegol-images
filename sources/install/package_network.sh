@@ -331,6 +331,7 @@ function package_network() {
     install_fierce
     # install_odat                  # Oracle Database Attacking Tool, FIXME
     install_dnsx                    # Fast and multi-purpose DNS toolkit
+    install_massdns                 # Install massdns as a requirement for shuffledns
     install_shuffledns              # Wrapper around massdns to enumerate valid subdomains
     install_tailscale               # Zero config VPN for building secure networks
     install_ligolo-ng               # Tunneling tool that uses a TUN interface
