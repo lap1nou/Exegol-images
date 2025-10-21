@@ -10,28 +10,25 @@ function configure_tor() {
 function install_osint_apt_tools() {
     # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing OSINT apt tools"
-    fapt exiftool exifprobe dnsenum tor whois recon-ng
+    fapt exiftool exifprobe dnsenum tor whois
 
     add-history exiftool
     add-history exifprobe
     add-history dnsenum
     add-history tor
     add-history whois
-    add-history recon-ng
-    
+
     add-test-command "wget -O /tmp/duck.png https://play-lh.googleusercontent.com/A6y8kFPu6iiFg7RSkGxyNspjOBmeaD3oAOip5dqQvXASnZp-Vg65jigJJLHr5mOEOryx && exiftool /tmp/duck.png && rm /tmp/duck.png" # For read exif information
     add-test-command "exifprobe -V; exifprobe -V |& grep 'Hubert Figuiere'"             # Probe and report structure and metadata content of camera image files
     add-test-command "dnsenum --help; dnsenum --help |& grep 'Print this help message'" # DNSEnum is a command-line tool that automatically identifies basic DNS records
     add-test-command "tor --help"                                                # Tor proxy
     add-test-command "whois --help"                                                     # See information about a specific domain name or IP address
-    add-test-command "recon-ng --help"                                                  # External recon tool
 
     add-to-list "exiftool,https://github.com/exiftool/exiftool,ExifTool is a Perl library and command-line tool for reading / writing and editing meta information in image / audio and video files."
     add-to-list "exifprobe,https://github.com/hfiguiere/exifprobe,Exifprobe is a command-line tool to parse EXIF data from image files."
     add-to-list "dnsenum,https://github.com/fwaeytens/dnsenum,dnsenum is a tool for enumerating DNS information about a domain."
     add-to-list "tor,https://github.com/torproject/tor,Anonymity tool that can help protect your privacy and online identity by routing your traffic through a network of servers."
     add-to-list "whois,https://packages.debian.org/sid/whois,See information about a specific domain name or IP address."
-    add-to-list "recon-ng,https://github.com/lanmaster53/recon-ng,External recon tool."
 }
 
 function install_youtubedl() {
@@ -523,6 +520,21 @@ function install_pymeta() {
   add-to-list "pymeta,https://github.com/m8sec/pymeta,Google and Bing scraping osint tool"
 }
 
+function install_recon_ng() {
+    colorecho "Installing Recon-ng"
+    git -C /opt/tools clone --depth 1 https://github.com/lanmaster53/recon-ng.git
+    cd /opt/tools/recon-ng || exit
+    python3 -m venv --system-site-packages ./venv
+    source ./venv/bin/activate
+    pip3 install -r REQUIREMENTS
+    pip3 install shodan censys beautifulsoup4 olefile pypdf3 lxml # Modules dependencies: https://github.com/lanmaster53/recon-ng-marketplace/blob/master/modules.yml
+    deactivate
+    add-aliases recon-ng
+    add-history recon-ng
+    add-test-command "recon-ng --help"
+    add-to-list "recon-ng,https://github.com/lanmaster53/recon-ng,External recon tool."
+}
+
 # Package dedicated to osint, recon and passive tools
 function package_osint() {
     set_env
@@ -572,6 +584,7 @@ function package_osint() {
     install_censys                  # An easy-to-use and lightweight API wrapper for Censys APIs
     install_gomapenum               # Nothing new but existing techniques are brought together in one tool.
     install_pymeta
+    install_recon_ng
     post_install
     end_time=$(date +%s)
     local elapsed_time=$((end_time - start_time))
