@@ -1013,6 +1013,7 @@ function install_pyfinduncommonshares() {
     cd /opt/tools/pyFindUncommonShares/ || exit
     local temp_fix_limit="2025-11-01"
     if check_temp_fix_expiry "$temp_fix_limit"; then
+      git fetch --unshallow
       git checkout 8dc90e537d70cfa36cd3eb948ddbcc75ae5f4c79
     fi
     python3 -m venv --system-site-packages ./venv
