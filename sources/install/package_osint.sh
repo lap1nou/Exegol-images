@@ -521,6 +521,7 @@ function install_pymeta() {
 }
 
 function install_recon_ng() {
+    # CODE-CHECK-WHITELIST=add-history
     colorecho "Installing Recon-ng"
     git -C /opt/tools clone --depth 1 https://github.com/lanmaster53/recon-ng.git
     cd /opt/tools/recon-ng || exit
@@ -530,7 +531,6 @@ function install_recon_ng() {
     pip3 install shodan censys beautifulsoup4 olefile pypdf3 lxml # Modules dependencies: https://github.com/lanmaster53/recon-ng-marketplace/blob/master/modules.yml
     deactivate
     add-aliases recon-ng
-    add-history recon-ng
     add-test-command "recon-ng --help"
     add-to-list "recon-ng,https://github.com/lanmaster53/recon-ng,External recon tool."
 }
