@@ -30,7 +30,7 @@ function install_binwalk() {
     colorecho "Installing binwalk"
     cargo install binwalk
     fapt squashfs-tools
-    pipx install jefferson ubi-reader uefi_firmware
+    pipx install --system-site-packages jefferson ubi-reader uefi_firmware
     add-history binwalk
     add-test-command "binwalk --help"
     add-to-list "binwalk,https://github.com/ReFirmLabs/binwalk,Binwalk is a tool for analyzing / reverse engineering / and extracting firmware images."
