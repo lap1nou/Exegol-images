@@ -549,8 +549,22 @@ function install_zehef() {
     pip3 install -r requirements.txt
     deactivate
     add-aliases zehef
-    add-test-command "zehef --help"
+    add-test-command "zehef.py --help"
     add-to-list "Zehef,https://github.com/N0rz3/Zehef,Zehef is an osint tool to track emails"
+}
+
+function install_metagoofil() {
+    # CODE-CHECK-WHITELIST=add-history
+    colorecho "Installing Metagoofil"
+    git -C /opt/tools clone --depth 1 https://github.com/opsdisk/metagoofil
+    cd /opt/tools/metagoofil || exit
+    python3 -m venv --system-site-packages ./venv
+    source ./venv/bin/activate
+    pip3 install -r requirements.txt
+    deactivate
+    add-aliases metagoofil
+    add-test-command "metagoofil.py --help"
+    add-to-list "Metagoofil,https://github.com/opsdisk/metagoofil,Metagoofil is a tool for gathering metadata of a website"
 }
 
 # Package dedicated to osint, recon and passive tools
@@ -604,6 +618,7 @@ function package_osint() {
     install_pymeta                  # Google and Bing scraping osint tool
     install_instaloader             # Download content/captions/metadata from Instagram
     install_zehef                   # OSINT tool to track emails
+    install_metagoofil              # Search Google and download specific file types
     post_install
     end_time=$(date +%s)
     local elapsed_time=$((end_time - start_time))
