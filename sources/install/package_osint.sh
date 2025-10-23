@@ -325,17 +325,6 @@ function install_finalrecon() {
     add-to-list "finalrecon,https://github.com/thewhiteh4t/FinalRecon,A web reconnaissance tool that gathers information about web pages"
 }
 
-function install_osrframework() {
-    # CODE-CHECK-WHITELIST=add-aliases
-    colorecho "Installing osrframework"
-    pipx install --system-site-packages osrframework
-    pipx inject osrframework 'urllib3<2'
-    pipx inject osrframework 'pip==21.2'
-    add-history osrframework
-    add-test-command "osrframework-cli --help"
-    add-to-list "osrframework,https://github.com/i3visio/osrframework,Include references to a bunch of different applications related to username checking / DNS lookups / information leaks research / deep web search / regular expressions extraction and many others."
-}
-
 function install_pwndb() {
     colorecho "Installing pwndb"
     git -C /opt/tools/ clone --depth 1 https://github.com/davidtavarez/pwndb.git
@@ -463,7 +452,7 @@ function install_blackbird() {
     cd /opt/tools/blackbird || exit
     sed -i "s#data.json#/opt/tools/blackbird/data.json#" blackbird.py
     sed -i "s#useragents.txt#/opt/tools/blackbird/useragents.txt#" blackbird.py
-    python3 -m venv --system-site-packages ./venv
+    python3.11 -m venv --system-site-packages ./venv
     source ./venv/bin/activate
     pip3 install -r requirements.txt
     deactivate
@@ -535,6 +524,50 @@ function install_recon_ng() {
     add-to-list "recon-ng,https://github.com/lanmaster53/recon-ng,External recon tool."
 }
 
+function install_instaloader() {
+    # CODE-CHECK-WHITELIST=add-aliases,add-history
+    colorecho "Installing Instaloader"
+    pipx install --system-site-packages instaloader
+    add-test-command "instaloader --help"
+    add-to-list "Instaloader,https://github.com/instaloader/instaloader,Download content/captions/metadata from Instagram"
+}
+
+function install_ghunt() {
+    # CODE-CHECK-WHITELIST=add-aliases,add-history
+    colorecho "Installing GHunt"
+    pipx install --system-site-packages ghunt
+    add-test-command "ghunt --help"
+    add-to-list "GHunt,https://github.com/mxrch/GHunt,Investigate Google Accounts with emails"
+}
+
+function install_zehef() {
+    # CODE-CHECK-WHITELIST=add-history
+    colorecho "Installing Zehef"
+    git -C /opt/tools clone --depth 1 https://github.com/N0rz3/Zehef
+    cd /opt/tools/Zehef || exit
+    python3 -m venv --system-site-packages ./venv
+    source ./venv/bin/activate
+    pip3 install -r requirements.txt
+    deactivate
+    add-aliases zehef
+    add-test-command "zehef.py --help"
+    add-to-list "Zehef,https://github.com/N0rz3/Zehef,Zehef is an osint tool to track emails"
+}
+
+function install_metagoofil() {
+    # CODE-CHECK-WHITELIST=add-history
+    colorecho "Installing Metagoofil"
+    git -C /opt/tools clone --depth 1 https://github.com/opsdisk/metagoofil
+    cd /opt/tools/metagoofil || exit
+    python3 -m venv --system-site-packages ./venv
+    source ./venv/bin/activate
+    pip3 install -r requirements.txt
+    deactivate
+    add-aliases metagoofil
+    add-test-command "metagoofil.py --help"
+    add-to-list "Metagoofil,https://github.com/opsdisk/metagoofil,Metagoofil is a tool for gathering metadata of a website"
+}
+
 # Package dedicated to osint, recon and passive tools
 function package_osint() {
     set_env
@@ -553,7 +586,7 @@ function package_osint() {
     install_h8mail                  # Email OSINT & Password breach hunting tool
     # install_infoga                  # Gathering email accounts informations TODO : 404, it seems the repo has been removed
     install_pwnedornot              # OSINT Tool for Finding Passwords of Compromised Email Addresses
-    # install_ghunt                 # Investigate Google Accounts with emails FIXME: Need python3.10 -> https://github.com/mxrch/GHunt/issues/398
+    install_ghunt                   # Investigate Google Accounts with emails
     install_phoneinfoga             # Advanced information gathering & OSINT framework for phone numbers
     install_maigret                 # Search pseudos and information about users on many platforms
     install_linkedin2username       # Generate username lists for companies on LinkedIn
@@ -566,7 +599,6 @@ function package_osint() {
     install_maltego                 # Maltego is a software used for open-source intelligence and forensics
     install_spiderfoot              # SpiderFoot automates OSINT collection
     install_finalrecon              # A fast and simple python script for web reconnaissance
-    install_osrframework            # OSRFramework, the Open Sources Research Framework
     # install_torbrowser            # Tor browser FIXME: Github project ?
     # configure_tor
     install_pwndb					# No need to say more, no ? Be responsible with this tool please !
@@ -579,12 +611,15 @@ function package_osint() {
     install_geopincer               # GeoPincer is a script that leverages OpenStreetMap's Overpass API in order to search for locations
     install_yalis                   # Yet Another LinkedIn Scraper
     install_murmurhash              # Little tool is to calculate a MurmurHash value
-    #install_blackbird              Skipping install because of https://github.com/p1ngul1n0/blackbird/issues/119 # OSINT tool to search fast for accounts by username
+    install_blackbird               # OSINT tool to search fast for accounts by username
     install_sherlock                # Hunt down social media accounts by username across social networks
     install_censys                  # An easy-to-use and lightweight API wrapper for Censys APIs
     install_gomapenum               # Nothing new but existing techniques are brought together in one tool.
-    install_pymeta
-    install_recon_ng
+    install_recon_ng                # External recon tool
+    install_pymeta                  # Google and Bing scraping osint tool
+    install_instaloader             # Download content/captions/metadata from Instagram
+    install_zehef                   # OSINT tool to track emails
+    install_metagoofil              # Search Google and download specific file types
     post_install
     end_time=$(date +%s)
     local elapsed_time=$((end_time - start_time))
