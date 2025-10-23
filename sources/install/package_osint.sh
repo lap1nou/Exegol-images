@@ -523,6 +523,36 @@ function install_pymeta() {
   add-to-list "pymeta,https://github.com/m8sec/pymeta,Google and Bing scraping osint tool"
 }
 
+function install_instaloader() {
+    # CODE-CHECK-WHITELIST=add-aliases,add-history
+    colorecho "Installing Instaloader"
+    pipx install --system-site-packages instaloader
+    add-test-command "instaloader --help"
+    add-to-list "Instaloader,https://github.com/instaloader/instaloader,Download content/captions/metadata from Instagram"
+}
+
+function install_ghunt() {
+    # CODE-CHECK-WHITELIST=add-aliases,add-history
+    colorecho "Installing GHunt"
+    pipx install --system-site-packages ghunt
+    add-test-command "ghunt --help"
+    add-to-list "GHunt,https://github.com/mxrch/GHunt,Investigate Google Accounts with emails"
+}
+
+function install_zehef() {
+    # CODE-CHECK-WHITELIST=add-history
+    colorecho "Installing Zehef"
+    git -C /opt/tools clone --depth 1 https://github.com/N0rz3/Zehef
+    cd /opt/tools/Zehef || exit
+    python3 -m venv --system-site-packages ./venv
+    source ./venv/bin/activate
+    pip3 install -r requirements.txt
+    deactivate
+    add-aliases zehef
+    add-test-command "zehef --help"
+    add-to-list "Zehef,https://github.com/N0rz3/Zehef,Zehef is an osint tool to track emails"
+}
+
 # Package dedicated to osint, recon and passive tools
 function package_osint() {
     set_env
@@ -541,7 +571,7 @@ function package_osint() {
     install_h8mail                  # Email OSINT & Password breach hunting tool
     # install_infoga                  # Gathering email accounts informations TODO : 404, it seems the repo has been removed
     install_pwnedornot              # OSINT Tool for Finding Passwords of Compromised Email Addresses
-    # install_ghunt                 # Investigate Google Accounts with emails FIXME: Need python3.10 -> https://github.com/mxrch/GHunt/issues/398
+    install_ghunt                   # Investigate Google Accounts with emails
     install_phoneinfoga             # Advanced information gathering & OSINT framework for phone numbers
     install_maigret                 # Search pseudos and information about users on many platforms
     install_linkedin2username       # Generate username lists for companies on LinkedIn
@@ -571,7 +601,9 @@ function package_osint() {
     install_sherlock                # Hunt down social media accounts by username across social networks
     install_censys                  # An easy-to-use and lightweight API wrapper for Censys APIs
     install_gomapenum               # Nothing new but existing techniques are brought together in one tool.
-    install_pymeta
+    install_pymeta                  # Google and Bing scraping osint tool
+    install_instaloader             # Download content/captions/metadata from Instagram
+    install_zehef                   # OSINT tool to track emails
     post_install
     end_time=$(date +%s)
     local elapsed_time=$((end_time - start_time))
