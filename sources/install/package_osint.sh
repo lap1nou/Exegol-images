@@ -466,7 +466,7 @@ function install_blackbird() {
     cd /opt/tools/blackbird || exit
     sed -i "s#data.json#/opt/tools/blackbird/data.json#" blackbird.py
     sed -i "s#useragents.txt#/opt/tools/blackbird/useragents.txt#" blackbird.py
-    python3 -m venv --system-site-packages ./venv
+    python3.11 -m venv --system-site-packages ./venv
     source ./venv/bin/activate
     pip3 install -r requirements.txt
     deactivate
@@ -567,7 +567,7 @@ function package_osint() {
     install_geopincer               # GeoPincer is a script that leverages OpenStreetMap's Overpass API in order to search for locations
     install_yalis                   # Yet Another LinkedIn Scraper
     install_murmurhash              # Little tool is to calculate a MurmurHash value
-    #install_blackbird              Skipping install because of https://github.com/p1ngul1n0/blackbird/issues/119 # OSINT tool to search fast for accounts by username
+    install_blackbird               # OSINT tool to search fast for accounts by username
     install_sherlock                # Hunt down social media accounts by username across social networks
     install_censys                  # An easy-to-use and lightweight API wrapper for Censys APIs
     install_gomapenum               # Nothing new but existing techniques are brought together in one tool.
