@@ -328,17 +328,6 @@ function install_finalrecon() {
     add-to-list "finalrecon,https://github.com/thewhiteh4t/FinalRecon,A web reconnaissance tool that gathers information about web pages"
 }
 
-function install_osrframework() {
-    # CODE-CHECK-WHITELIST=add-aliases
-    colorecho "Installing osrframework"
-    pipx install --system-site-packages osrframework
-    pipx inject osrframework 'urllib3<2'
-    pipx inject osrframework 'pip==21.2'
-    add-history osrframework
-    add-test-command "osrframework-cli --help"
-    add-to-list "osrframework,https://github.com/i3visio/osrframework,Include references to a bunch of different applications related to username checking / DNS lookups / information leaks research / deep web search / regular expressions extraction and many others."
-}
-
 function install_pwndb() {
     colorecho "Installing pwndb"
     git -C /opt/tools/ clone --depth 1 https://github.com/davidtavarez/pwndb.git
@@ -598,7 +587,6 @@ function package_osint() {
     install_maltego                 # Maltego is a software used for open-source intelligence and forensics
     install_spiderfoot              # SpiderFoot automates OSINT collection
     install_finalrecon              # A fast and simple python script for web reconnaissance
-    install_osrframework            # OSRFramework, the Open Sources Research Framework
     # install_torbrowser            # Tor browser FIXME: Github project ?
     # configure_tor
     install_pwndb					# No need to say more, no ? Be responsible with this tool please !
