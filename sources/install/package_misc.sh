@@ -190,7 +190,7 @@ function install_creds() {
     colorecho "Installing creds"
     pipx install --system-site-packages git+https://github.com/ihebski/DefaultCreds-cheat-sheet
     add-history creds
-    add-test-command "creds version"
+    add-test-command "creds update"
     add-to-list "creds,https://github.com/ihebski/DefaultCreds-cheat-sheet,One place for all the default credentials to assist pentesters during an engagement. This document has several products default login/password gathered from multiple sources."
 }
 
