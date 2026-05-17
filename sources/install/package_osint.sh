@@ -255,7 +255,7 @@ function install_ipinfo() {
     # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing ipinfo"
 
-    go install -v github.com/ipinfo/cli/ipinfo@ipinfo-3.3.1
+    go install -v github.com/ipinfo/cli/ipinfo@latest
     asdf reshim golang
 
     add-history ipinfo
