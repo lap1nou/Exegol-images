@@ -103,6 +103,15 @@ function install_ldapdomaindump() {
     add-to-list "ldapdomaindump,https://github.com/dirkjanm/ldapdomaindump,A tool for dumping domain data from an LDAP service"
 }
 
+function install_adwsdomaindump() {
+    # CODE-CHECK-WHITELIST=add-aliases
+    colorecho "Installing adwsdomaindump"
+    pipx install --system-site-packages git+https://github.com/mverschu/adwsdomaindump
+    add-history adwsdomaindump
+    add-test-command "adwsdomaindump --help"
+    add-to-list "adwsdomaindump,https://github.com/mverschu/adwsdomaindump,A tool for dumping domain data via ADWS for evasion purposes."
+}
+
 function install_bloodhound-py() {
     colorecho "Installing and Python ingestor for BloodHound"
     pipx install --system-site-packages git+https://github.com/fox-it/BloodHound.py
@@ -195,13 +204,27 @@ function install_bloodhound-ce() {
     cd "${bloodhoundce_path}/src/" || exit
 
     # Reference: https://github.com/SpecterOps/BloodHound/blob/main/dockerfiles/bloodhound.Dockerfile
+    # BloodHound workspaces expect globalThis.crypto during build (Node >=19).
+    source ~/.nvm/nvm.sh
+    nvm install 20
+    nvm use 20
     yarn install
     yarn build
     mkdir -p ./cmd/api/src/api/static/assets
     cp -r ./cmd/ui/dist/. ./cmd/api/src/api/static/assets
 
     # Build the API
-    asdf set golang 1.24.4
+    asdf set golang 1.26.1
+
+    # PostgreSQL 15 rejects inline `STORAGE MAIN` in BHCE SQL migrations (still present in v9.2.2).
+    # Patch all embedded migration SQL files before go build. See upstream-issues/bloodhound-ce-storage-main.md
+    # Revert when upstream removes STORAGE MAIN from migrations:
+    #   remove the temp_fix_limit block below and keep only the go build step.
+    local temp_fix_limit="2026-12-01"
+    if check_temp_fix_expiry "$temp_fix_limit"; then
+        find ./cmd/api/src/database/migration/migrations -name '*.sql' -exec sed -i 's/[[:space:]]*STORAGE MAIN//' {} +
+    fi
+
     go build -C cmd/api/src -o ${bloodhoundce_path}/bloodhound -ldflags "-X 'github.com/specterops/bloodhound/cmd/api/src/version.majorVersion=8' -X 'github.com/specterops/bloodhound/cmd/api/src/version.minorVersion=0' -X 'github.com/specterops/bloodhound/cmd/api/src/version.patchVersion=1'" github.com/specterops/bloodhound/cmd/api/src/cmd/bhapi
 
     # Force remove go and yarn cache that are not stored in standard locations
@@ -394,29 +417,11 @@ function install_privexchange() {
 }
 
 function install_ruler() {
+    # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Downloading ruler and form templates from source..."
-    mkdir -p /opt/tools/ruler || exit
-    cd /opt/tools/ruler || exit
-    asdf set golang 1.24.1
-    mkdir -p .go/bin
-    git clone https://github.com/sensepost/ruler.git src
-
-    # Check if cloning was successful before proceeding
-    if [ ! -d "src" ]; then
-        colorecho "ERROR: Failed to clone the ruler repository." "red"
-        exit 1
-    fi
-
-    # Navigate into the source directory
-    cd src || exit
-
-    # Install from source.
-    GOBIN=/opt/tools/ruler/.go/bin go install .
-    cd ..
-    rm -rf src
-
+    asdf set golang 1.26.1
+    go install -v github.com/sensepost/ruler@latest
     asdf reshim golang
-    add-aliases ruler
     add-history ruler
     add-test-command "ruler --version"
     add-to-list "ruler,https://github.com/sensepost/ruler,Outlook Rules exploitation framework."
@@ -528,7 +533,7 @@ function install_krbrelayx() {
 
 function install_evilwinrm() {
     colorecho "Installing evil-winrm"
-    rvm use 3.1.2@evil-winrm --create
+    rvm use 3.2.2@evil-winrm --create
     gem install evil-winrm
     rvm use 3.2.2@default
     add-aliases evil-winrm
@@ -908,17 +913,10 @@ function install_pywhisker() {
 function install_manspider() {
     # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing Manspider"
-    if [[ $(uname -m) = 'x86_64' ]]
-    then
-        pipx install --system-site-packages git+https://github.com/blacklanternsecurity/MANSPIDER
-        add-history manspider
-        add-test-command "manspider --help"
-        add-to-list "manspider,https://github.com/blacklanternsecurity/MANSPIDER,Manspider will crawl every share on every target system. If provided creds don't work it will fall back to 'guest' then to a null session."
-    else
-        # https://github.com/blacklanternsecurity/MANSPIDER/issues/55
-        criticalecho-noexit "This installation function doesn't support architecture $(uname -m)" && return
-    fi
-
+    pipx install --system-site-packages git+https://github.com/blacklanternsecurity/MANSPIDER
+    add-history manspider
+    add-test-command "manspider --help"
+    add-to-list "manspider,https://github.com/blacklanternsecurity/MANSPIDER,Manspider will crawl every share on every target system. If provided creds don't work it will fall back to 'guest' then to a null session."
 }
 
 function install_targetedKerberoast() {
@@ -1079,13 +1077,7 @@ function install_ldaprelayscan() {
 function install_goldencopy() {
     # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing GoldenCopy"
-    git -C /opt/tools/ clone --depth 1 https://github.com/Dramelac/GoldenCopy
-    cd /opt/tools/GoldenCopy || exit
-    python3 -m venv --system-site-packages ./venv
-    source ./venv/bin/activate
-    pip3 install .
-    deactivate
-    ln -v -s /opt/tools/GoldenCopy/venv/bin/goldencopy /opt/tools/bin/goldencopy
+    pipx install --system-site-packages GoldenCopy
     add-history goldencopy
     add-test-command "goldencopy --help"
     add-to-list "goldencopy,https://github.com/Dramelac/GoldenCopy,Copy the properties and groups of a user from neo4j (bloodhound) to create an identical golden ticket"
@@ -1240,6 +1232,17 @@ function install_neo4j() {
     neo4j-admin set-initial-password exegol4thewin
     mkdir -p /usr/share/neo4j/logs/
     touch /usr/share/neo4j/logs/neo4j.log
+
+    # Install GDS plugin (required by autobloody)
+    # Current neo4j 4.4.x is compatible with GDS 2.6.x, see <https://neo4j.com/docs/graph-data-science/current/installation/supported-neo4j-versions>
+    wget https://graphdatascience.ninja/neo4j-graph-data-science-2.6.8.jar -P /var/lib/neo4j/plugins/
+    # Config docs: <https://neo4j.com/docs/graph-data-science/current/installation/neo4j-server/>
+    cat << 'EOF' | sudo tee -a /etc/neo4j/neo4j.conf > /dev/null
+# --- GDS config for autobloody ---
+dbms.security.procedures.unrestricted=gds.*
+dbms.security.procedures.allowlist=gds.*
+EOF
+
     add-aliases neo4j
     add-history neo4j
     add-test-command "neo4j version"
@@ -1519,14 +1522,11 @@ function install_adminer() {
 }
 
 function install_goexec() {
+    # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing GoExec"
-    mkdir -p /opt/tools/goexec || exit
-    cd /opt/tools/goexec || exit
-    asdf set golang 1.24.1
-    mkdir -p .go/bin
-    GOBIN=/opt/tools/goexec/.go/bin CGO_ENABLED=0 go install -ldflags='-s -w' -v github.com/FalconOpsLLC/goexec@latest
+    asdf set golang 1.26.1
+    CGO_ENABLED=0 go install -ldflags='-s -w' -v github.com/FalconOpsLLC/goexec@latest
     asdf reshim golang
-    add-aliases goexec
     add-history goexec
     add-test-command "goexec --help"
     add-to-list "GoExec,https://github.com/FalconOpsLLC/goexec,GoExec is a new take on some of the methods used to gain remote execution on Windows devices. GoExec implements a number of largely unrealized execution methods and provides significant OPSEC improvements overall"
@@ -1559,7 +1559,7 @@ function install_godap() {
 function install_powerview() {
     # CODE-CHECK-WHITELIST=add-aliases
     colorecho "Installing powerview.py"
-    pipx install git+https://github.com/aniqfakhrul/powerview.py
+    pipx install --system-site-packages git+https://github.com/aniqfakhrul/powerview.py
     add-history powerview.py
     add-test-command "powerview --help"
     add-to-list "Powerview.py,https://github.com/aniqfakhrul/powerview.py,PowerView.py is an alternative for the awesome original PowerView.ps1 script."
@@ -1577,6 +1577,20 @@ function install_pysnaffler() {
     add-history pysnaffler
     add-test-command "pysnaffler --help"
     add-to-list "pysnaffler,https://github.com/skelsec/pysnaffler,Snaffler. But in python."
+}
+
+function install_pygoldengmsa() {
+    colorecho "Installing pyGoldenGMSA"
+    git -C /opt/tools/ clone --depth 1 https://github.com/felixbillieres/pyGoldenGMSA.git
+    cd /opt/tools/pyGoldenGMSA || exit
+    python3 -m venv --system-site-packages ./venv
+    source ./venv/bin/activate
+    pip3 install -r requirements.txt
+    deactivate
+    add-aliases pygoldengmsa
+    add-history pygoldengmsa
+    add-test-command "pyGoldenGMSA.py --help"
+    add-to-list "pygoldengmsa,https://github.com/felixbillieres/pyGoldenGMSA, Cross-platform Python implementation of the GoldenGMSA attack for exploiting Group Managed Service Accounts (gMSA) in Active Directory. "
 }
 
 function install_evil-winrm-py() {
@@ -1604,7 +1618,30 @@ function install_daclsearch() {
     pipx install --system-site-packages git+https://github.com/cogiceo/daclsearch
     add-history daclsearch
     add-test-command "daclsearch --help"
-    add-to-list "daclsearch,https://github.com/uknowsec/daclsearch,Exhaustive search and flexible filtering of Active Directory ACEs"
+    add-to-list "daclsearch,https://github.com/cogiceo/daclsearch,Exhaustive search and flexible filtering of Active Directory ACEs"
+}
+
+function install_bloodbash() {
+    colorecho "Installing bloodbash"
+    git -C /opt/tools/ clone --depth 1 https://github.com/dotnetrussell/bloodbash.git
+    cd /opt/tools/bloodbash || exit
+    python3 -m venv --system-site-packages ./venv/
+    source ./venv/bin/activate
+    pip3 install -r requirements.txt
+    deactivate
+    add-aliases bloodbash
+    add-history bloodbash
+    add-test-command "bloodbash.py --help"
+    add-to-list "bloodbash,https://github.com/DotNetRussell/BloodBash,BloodBash is a powerful standalone BloodHound / SharpHound + AzureHound JSON analyzer written in Python"
+}
+
+function install_evenmonitor() {
+    # CODE-CHECK-WHITELIST=add-aliases
+    colorecho "Installing evenmonitor"
+    pipx install --python 3.13 --system-site-packages git+https://github.com/NeffIsBack/EVENmonitor
+    add-history evenmonitor
+    add-test-command "EVENmonitor --help"
+    add-to-list "EVENmonitor,https://github.com/NeffIsBack/EVENmonitor,Monitor the Windows Event Log with grep-like features or filtering for specific Event IDs "
 }
 
 # Package dedicated to internal Active Directory tools
@@ -1618,6 +1655,7 @@ function package_ad() {
     install_pretender
     install_responder               # LLMNR, NBT-NS and MDNS poisoner
     install_ldapdomaindump
+    install_adwsdomaindump
     install_sprayhound              # Password spraying tool
     install_smartbrute              # Password spraying tool
     install_bloodhound-py           # ingestor for legacy BloodHound
@@ -1674,6 +1712,7 @@ function package_ad() {
     install_shadowcoerce
     install_gmsadumper
     install_pylaps
+    install_pygoldengmsa
     install_pyfinduncommonshares
     install_ldaprelayscan
     install_goldencopy
@@ -1725,6 +1764,8 @@ function package_ad() {
     install_keytabextract          # Extract valuable information from keytab files
     install_daclsearch             # Exhaustive search and flexible filtering of Active Directory ACEs
     install_impacket_og            # Impacket scripts (original version)
+    install_bloodbash              # Bloodhound in terminal
+    install_evenmonitor            # Monitor the Windows Event Log with grep-like features or filtering for specific Event IDs
     post_install
     end_time=$(date +%s)
     local elapsed_time=$((end_time - start_time))
