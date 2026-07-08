@@ -30,6 +30,14 @@ function install_john() {
     cd /opt/tools/john/src || exit
     ./configure --disable-native-tests && make
     yes|cpan install Compress::Raw::Lzma
+
+    # Install required asn1crypto for pfx2john.py
+    cd /opt/tools/john/run/ || exit
+    python3 -m venv --system-site-packages ./venv
+    source ./venv/bin/activate
+    pip install asn1crypto
+    deactivate
+
     add-aliases john-the-ripper
     add-history john-the-ripper
     add-test-command "john --help"
