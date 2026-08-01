@@ -1,3 +1,3 @@
 alias john='/opt/tools/john/run/john'
-alias ssh2john='/opt/tools/john/run/ssh2john.py'
+alias ssh2john.py='/opt/tools/john/run/ssh2john.py'
 alias pfx2john.py='/opt/tools/john/run/venv/bin/python3 /opt/tools/john/run/pfx2john.py'
