@@ -1314,6 +1314,15 @@ function install_GPOddity() {
     add-to-list "GPOddity,https://github.com/synacktiv/GPOddity,Aiming at automating GPO attack vectors through NTLM relaying (and more)"
 }
 
+function install_gpoParser() {
+    # CODE-CHECK-WHITELIST=add-aliases
+    colorecho "Installing gpoParser"
+    pipx install --system-site-packages git+https://github.com/synacktiv/gpoParser
+    add-history gpoParser
+    add-test-command "gpoParser -h"
+    add-to-list "gpoParser,https://github.com/synacktiv/gpoParser,Tool designed to extract and analyze configurations applied through Group Policy Objects (GPOs) in an Active Directory environment."
+}
+
 function install_netexec() {
     colorecho "Installing netexec"
     git -C /opt/tools/ clone --depth 1 https://github.com/Pennyw0rth/NetExec
@@ -1761,6 +1770,7 @@ function package_ad() {
     install_roadtx                 # ROADtools Token eXchange
     install_teamsphisher           # TeamsPhisher is a Python3 program that facilitates the delivery of phishing messages and attachments to Microsoft Teams users whose organizations allow external communications.
     install_GPOddity
+    install_gpoParser              # GPO parser for Bloodhound
     install_netexec                # Crackmapexec repo
     install_extractbitlockerkeys   # Extract Bitlocker recovery keys from all the computers of the domain
     install_LDAPWordlistHarvester
